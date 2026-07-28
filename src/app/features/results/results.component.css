@@ -1,0 +1,22 @@
+/* results.component.css */
+
+.score-bar {
+  transition: width 0.7s ease-in-out;
+}
+
+.signal-tile {
+  min-width: 0;
+  transition: box-shadow 0.15s ease;
+}
+
+.signal-tile:hover {
+  box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.08);
+}
+
+details > summary {
+  list-style: none;
+}
+
+details > summary::-webkit-details-marker {
+  display: none;
+}

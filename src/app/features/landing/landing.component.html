@@ -1,0 +1,107 @@
+<!-- Hero Section -->
+<section class="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white py-24 px-4">
+  <div class="max-w-4xl mx-auto text-center">
+    <div class="inline-flex items-center gap-2 bg-blue-500/20 border border-blue-400/30 rounded-full px-4 py-1.5 text-sm text-blue-200 mb-8">
+      <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+      IBM watsonx.ai Powered  
+    </div>
+    <h1 class="text-5xl md:text-6xl font-bold leading-tight mb-6">
+      Before you trust it,<br />
+      <span class="text-blue-400">check it.</span>
+    </h1>
+    <p class="text-xl text-blue-100 max-w-2xl mx-auto mb-10 leading-relaxed">
+      TruthLens AI helps you analyze suspicious messages, URLs, scams, and
+      online claims using AI-powered evidence and risk analysis.
+      <span class="text-blue-300">Designed for Tanzania and East Africa.</span>
+    </p>
+
+    <!-- Main CTA input -->
+    <div class="cta-box bg-white/10 backdrop-blur border border-white/20 rounded-2xl p-6 max-w-2xl mx-auto">
+      <p class="text-sm text-blue-200 mb-3">Paste a message, URL, or suspicious claim</p>
+      <textarea
+        [(ngModel)]="heroInput"
+        placeholder="e.g. Congratulations! You have won a prize. Click here to claim..."
+        rows="3"
+        class="w-full bg-white text-gray-900 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"
+      ></textarea>
+      <div class="flex gap-3 mt-3">
+        <a [routerLink]="['/analyze']"
+           [queryParams]="heroInput ? {text: heroInput} : {}"
+           class="flex-1 bg-blue-500 hover:bg-blue-400 text-white font-semibold py-3 rounded-xl text-center transition-colors">
+          Analyze Now →
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Stats bar -->
+<div class="bg-blue-600 text-white py-4">
+  <div class="max-w-5xl mx-auto px-4">
+    <div class="flex flex-wrap justify-center gap-10 text-center">
+      @for (stat of stats; track stat.label) {
+        <div>
+          <div class="text-2xl font-bold">{{ stat.value }}</div>
+          <div class="text-xs text-blue-200 mt-0.5">{{ stat.label }}</div>
+        </div>
+      }
+    </div>
+  </div>
+</div>
+
+<!-- How it works -->
+<section class="py-20 px-4 bg-white">
+  <div class="max-w-5xl mx-auto">
+    <h2 class="text-3xl font-bold text-center text-gray-900 mb-4">How TruthLens AI works</h2>
+    <p class="text-center text-gray-500 mb-14 max-w-xl mx-auto">
+      A multi-agent pipeline analyzes every submission for risk signals and provides a clear, explainable result.
+    </p>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      @for (step of steps; track step.title) {
+        <div class="step-card border border-gray-100 rounded-2xl p-6 bg-slate-50 hover:shadow-md transition-shadow">
+          <div class="mb-4" [innerHTML]="step.icon"></div>
+          <h3 class="font-semibold text-gray-900 mb-2">{{ step.title }}</h3>
+          <p class="text-sm text-gray-500 leading-relaxed">{{ step.desc }}</p>
+        </div>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- Demo Scenarios -->
+<section class="py-20 px-4 bg-slate-50">
+  <div class="max-w-5xl mx-auto">
+    <h2 class="text-3xl font-bold text-center text-gray-900 mb-4">Try a demo scenario</h2>
+    <p class="text-center text-gray-500 mb-10">Click any scenario to analyze it with TruthLens AI</p>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      @for (s of scenarios; track s.label) {
+        <a [routerLink]="['/analyze']"
+           [queryParams]="s.url ? {url: s.url} : {text: s.text}"
+           class="scenario-card group border border-gray-200 bg-white rounded-xl p-5 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer">
+          <div class="mb-3" [innerHTML]="s.icon"></div>
+          <div class="font-semibold text-gray-900 text-sm mb-1.5">{{ s.label }}</div>
+          <p class="text-xs text-gray-500 line-clamp-3 leading-relaxed">{{ s.text || s.url }}</p>
+          <div class="mt-3 text-xs text-blue-600 font-medium group-hover:underline">Analyze →</div>
+        </a>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- IBM Tech section -->
+<section class="py-16 px-4 bg-white border-t border-gray-100">
+  <div class="max-w-5xl mx-auto text-center">
+    <h2 class="text-2xl font-bold text-gray-900 mb-3">Built on IBM Technology</h2>
+    <p class="text-gray-500 text-sm mb-10 max-w-xl mx-auto">
+      TruthLens AI integrates IBM watsonx.ai and IBM Granite models for explainable,
+      responsible AI that can be deployed on IBM Cloud.
+    </p>
+    <div class="flex flex-wrap justify-center gap-4">
+      @for (tech of ibmTech; track tech) {
+        <div class="tech-badge border border-blue-100 bg-blue-50 rounded-lg px-5 py-3 text-sm font-medium text-blue-800">
+          {{ tech }}
+        </div>
+      }
+    </div>
+  </div>
+</section>

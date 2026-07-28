@@ -1,0 +1,9 @@
+/* navbar.component.css */
+
+.logo-icon {
+  transition: opacity 0.15s ease;
+}
+
+.logo-icon:hover {
+  opacity: 0.85;
+}

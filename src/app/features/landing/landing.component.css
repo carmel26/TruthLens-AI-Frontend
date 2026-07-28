@@ -1,0 +1,29 @@
+/* landing.component.css */
+
+.cta-box {
+  backdrop-filter: blur(12px);
+}
+
+.step-card {
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.step-card:hover {
+  transform: translateY(-2px);
+}
+
+.scenario-card {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+}
+
+.scenario-card:hover {
+  transform: translateY(-2px);
+}
+
+.tech-badge {
+  transition: background-color 0.15s ease;
+}
+
+.tech-badge:hover {
+  background-color: #dbeafe;
+}

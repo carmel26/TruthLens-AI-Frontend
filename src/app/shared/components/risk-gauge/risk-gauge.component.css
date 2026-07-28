@@ -1,0 +1,5 @@
+/* risk-gauge.component.css */
+
+.gauge-ring {
+  transition: stroke-dashoffset 0.8s ease-in-out;
+}

@@ -1,0 +1,638 @@
+<div class="max-w-4xl mx-auto px-4 py-10">
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="bg-white border border-gray-200 rounded-2xl p-8">
+      <app-skeleton />
+    </div>
+  }
+
+  <!-- Error -->
+  @if (error()) {
+    <div
+      class="bg-red-50 border border-red-200 text-red-700 rounded-2xl p-8 text-center"
+    >
+      <p class="font-semibold">Failed to load analysis</p>
+      <p class="text-sm mt-2">{{ error() }}</p>
+      <a
+        routerLink="/analyze"
+        class="mt-4 inline-block text-sm text-blue-600 hover:underline"
+        >Try again</a
+      >
+    </div>
+  }
+
+  <!-- Result -->
+  @if (analysis() && !loading()) {
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+      <a
+        routerLink="/analyze"
+        class="text-sm text-blue-600 hover:underline flex items-center gap-1"
+      >
+        ← New Analysis
+      </a>
+      <span class="text-xs text-gray-400"
+        >ID: {{ analysis()!.id.slice(0, 8) }}...</span
+      >
+    </div>
+
+    <!-- Risk Overview Card -->
+    <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-8 mb-6">
+      <div class="flex flex-col md:flex-row items-center gap-8">
+        <!-- Gauge -->
+        <app-risk-gauge
+          [score]="analysis()!.risk_score ?? 0"
+          [label]="analysis()!.risk_level ?? ''"
+        />
+
+        <!-- Summary -->
+        <div class="flex-1">
+          <div class="flex items-center gap-3 mb-3 flex-wrap">
+            <app-risk-badge [riskLevel]="analysis()!.risk_level" />
+            <span
+              class="text-xs bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full font-medium"
+            >
+              {{ formatCategory(analysis()!.threat_category) }}
+            </span>
+            <span
+              class="text-xs bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full font-medium"
+            >
+              Confidence: {{ analysis()!.confidence_score ?? 0 }}%
+            </span>
+          </div>
+
+          <h1 class="text-xl font-bold text-gray-900 mb-3">
+            {{ analysis()!.summary }}
+          </h1>
+
+          @if (analysis()!.recommendation) {
+            <div
+              [class]="recommendationClass()"
+              class="border rounded-xl px-4 py-3 text-sm leading-relaxed"
+            >
+              <strong>Recommendation:</strong> {{ analysis()!.recommendation }}
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Risk Score Breakdown -->
+    @if (analysis()!.risk_assessment) {
+      <div
+        class="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 mb-6"
+      >
+        <h2 class="text-base font-semibold text-gray-900 mb-4">
+          Risk Score Breakdown
+        </h2>
+        <div class="space-y-3">
+          @for (item of scoreBreakdown(); track item.label) {
+            <div>
+              <div class="flex justify-between text-xs text-gray-600 mb-1">
+                <span>{{ item.label }}</span>
+                <span class="font-medium">{{ item.score }}/100</span>
+              </div>
+              <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div
+                  class="score-bar h-full rounded-full transition-all duration-700"
+                  [style.width.%]="item.score"
+                  [class]="
+                    item.score > 65
+                      ? 'bg-red-500'
+                      : item.score > 35
+                        ? 'bg-yellow-400'
+                        : 'bg-green-500'
+                  "
+                ></div>
+              </div>
+            </div>
+          }
+        </div>
+        <p class="text-xs text-gray-400 mt-4">
+          ⓘ Weights are configurable and are not scientifically validated. This
+          analysis is advisory only.
+        </p>
+      </div>
+    }
+
+    <!-- Key Findings -->
+    @if (analysis()!.risk_assessment?.key_findings?.length) {
+      <div
+        class="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 mb-6"
+      >
+        <h2 class="text-base font-semibold text-gray-900 mb-4">Key Findings</h2>
+        <ul class="space-y-2">
+          @for (
+            finding of analysis()!.risk_assessment!.key_findings;
+            track finding
+          ) {
+            <li class="flex items-start gap-2.5 text-sm text-gray-700">
+              <!-- warning triangle icon -->
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 16 16"
+                fill="currentColor"
+                width="14"
+                height="14"
+                class="text-orange-500 mt-0.5 flex-shrink-0"
+                aria-hidden="true"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M6.701 2.25c.577-1 2.02-1 2.598 0l5.196 9a1.5 1.5 0 0 1-1.299 2.25H2.804a1.5 1.5 0 0 1-1.3-2.25l5.197-9ZM8 4a.75.75 0 0 1 .75.75v3a.75.75 0 0 1-1.5 0v-3A.75.75 0 0 1 8 4Zm0 8a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+              {{ finding }}
+            </li>
+          }
+        </ul>
+      </div>
+    }
+
+    <!-- Extracted Claims -->
+    @if (analysis()!.claims.length) {
+      <div
+        class="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 mb-6"
+      >
+        <h2 class="text-base font-semibold text-gray-900 mb-4">
+          Extracted Claims
+          <span class="text-xs font-normal text-gray-400 ml-2"
+            >Requires further verification</span
+          >
+        </h2>
+        <div class="space-y-3">
+          @for (claim of analysis()!.claims; track claim.id) {
+            <div
+              [class]="
+                claim.is_suspicious
+                  ? 'border border-orange-200 bg-orange-50 rounded-lg px-4 py-3'
+                  : 'border border-gray-100 bg-gray-50 rounded-lg px-4 py-3'
+              "
+            >
+              <p class="text-sm text-gray-800">"{{ claim.claim_text }}"</p>
+              @if (claim.requires_verification) {
+                <span class="text-xs text-orange-600 font-medium mt-1 block"
+                  >Requires verification</span
+                >
+              }
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- URL Analysis -->
+    @if (analysis()!.url_analysis) {
+      <div
+        class="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 mb-6"
+      >
+        <!-- Header row -->
+        <div class="flex items-center justify-between mb-5">
+          <h2 class="text-base font-semibold text-gray-900">URL Analysis</h2>
+          <span
+            [class]="urlScoreClass(analysis()!.url_analysis!.url_risk_score)"
+            class="text-sm tabular-nums"
+          >
+            {{ analysis()!.url_analysis!.url_risk_score ?? "—" }}/100
+          </span>
+        </div>
+
+        <!-- Analysed URL -->
+        <div
+          class="bg-gray-50 rounded-lg px-4 py-2.5 mb-5 flex items-start gap-2 overflow-hidden"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 16 16"
+            fill="currentColor"
+            width="14"
+            height="14"
+            class="text-gray-400 mt-0.5 flex-shrink-0"
+            aria-hidden="true"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M8.914 6.025a.75.75 0 0 1 1.06 0 3.5 3.5 0 0 1 0 4.95l-2 2a3.5 3.5 0 0 1-5.396-4.402.75.75 0 0 1 1.251.827 2 2 0 0 0 3.085 2.514l2-2a2 2 0 0 0 0-2.828.75.75 0 0 1 0-1.06Zm-3.828 1.96a.75.75 0 0 1-1.06 0 3.5 3.5 0 0 1 0-4.95l2-2a3.5 3.5 0 0 1 5.396 4.402.75.75 0 0 1-1.251-.827 2 2 0 0 0-3.085-2.514l-2 2a2 2 0 0 0 0 2.828.75.75 0 0 1 0 1.06Z"
+              clip-rule="evenodd"
+            />
+          </svg>
+          <span class="text-xs text-gray-700 font-mono break-all">
+            {{ analysis()!.url_analysis!.url }}
+          </span>
+        </div>
+
+        <!-- Signal grid — 2×3 on md, 1×6 on sm -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 mb-5">
+          <!-- HTTPS -->
+          <div
+            class="signal-tile flex flex-col items-center bg-gray-50 rounded-xl p-3 gap-1"
+          >
+            @if (analysis()!.url_analysis!.uses_https) {
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                width="22"
+                height="22"
+                class="text-green-500"
+                aria-hidden="true"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M9.661 2.237a.531.531 0 0 1 .678 0 11.947 11.947 0 0 0 7.078 2.749.5.5 0 0 1 .479.425c.069.52.104 1.05.104 1.589 0 5.162-3.26 9.563-7.834 11.256a.48.48 0 0 1-.332 0C5.26 16.563 2 12.162 2 7c0-.538.035-1.069.104-1.589a.5.5 0 0 1 .48-.425 11.947 11.947 0 0 0 7.077-2.749Zm3.314 5.09a.75.75 0 0 0-1.12-.99L9 9.638l-1.354-1.354a.75.75 0 0 0-1.06 1.06l1.884 1.885a.75.75 0 0 0 1.09-.044l3.355-3.858Z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            } @else {
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                width="22"
+                height="22"
+                class="text-orange-500"
+                aria-hidden="true"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M9.661 2.237a.531.531 0 0 1 .678 0 11.947 11.947 0 0 0 7.078 2.749.5.5 0 0 1 .479.425c.069.52.104 1.05.104 1.589 0 5.162-3.26 9.563-7.834 11.256a.48.48 0 0 1-.332 0C5.26 16.563 2 12.162 2 7c0-.538.035-1.069.104-1.589a.5.5 0 0 1 .48-.425 11.947 11.947 0 0 0 7.077-2.749Zm-1.22 8.513a.75.75 0 0 0 1.06-1.06L8.06 8.25l1.44-1.44a.75.75 0 0 0-1.06-1.06L7 7.19 5.56 5.75a.75.75 0 0 0-1.06 1.06L5.94 8.25l-1.44 1.44a.75.75 0 1 0 1.06 1.06L7 9.31l1.44 1.44Z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            }
+            <span class="text-xs text-gray-500">HTTPS</span>
+            <span class="text-xs font-semibold">{{
+              analysis()!.url_analysis!.uses_https ? "Yes" : "No"
+            }}</span>
+          </div>
+
+          <!-- Brand Impersonation -->
+          <div
+            class="signal-tile flex flex-col items-center bg-gray-50 rounded-xl p-3 gap-1"
+          >
+            @if (analysis()!.url_analysis!.is_brand_impersonation_suspected) {
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                width="22"
+                height="22"
+                class="text-red-500"
+                aria-hidden="true"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16ZM8.28 7.22a.75.75 0 0 0-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 1 0 1.06 1.06L10 11.06l1.72 1.72a.75.75 0 1 0 1.06-1.06L11.06 10l1.72-1.72a.75.75 0 0 0-1.06-1.06L10 8.94 8.28 7.22Z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            } @else {
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                width="22"
+                height="22"
+                class="text-green-500"
+                aria-hidden="true"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            }
+            <span class="text-xs text-gray-500">Brand</span>
+            <span class="text-xs font-semibold">
+              {{
+                analysis()!.url_analysis!.is_brand_impersonation_suspected
+                  ? "Suspected"
+                  : "OK"
+              }}
+            </span>
+          </div>
+
+          <!-- Typosquatting -->
+          <div
+            class="signal-tile flex flex-col items-center bg-gray-50 rounded-xl p-3 gap-1"
+          >
+            @if (analysis()!.url_analysis!.is_typosquatting_suspected) {
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                width="22"
+                height="22"
+                class="text-red-500"
+                aria-hidden="true"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16ZM8.28 7.22a.75.75 0 0 0-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 1 0 1.06 1.06L10 11.06l1.72 1.72a.75.75 0 1 0 1.06-1.06L11.06 10l1.72-1.72a.75.75 0 0 0-1.06-1.06L10 8.94 8.28 7.22Z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            } @else {
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                width="22"
+                height="22"
+                class="text-green-500"
+                aria-hidden="true"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            }
+            <span class="text-xs text-gray-500">Typosquat</span>
+            <span class="text-xs font-semibold">
+              {{
+                analysis()!.url_analysis!.is_typosquatting_suspected
+                  ? "Suspected"
+                  : "OK"
+              }}
+            </span>
+          </div>
+
+          <!-- TLD Risk -->
+          <div
+            class="signal-tile flex flex-col items-center bg-gray-50 rounded-xl p-3 gap-1"
+          >
+            <span
+              class="text-lg font-bold"
+              [class]="
+                (analysis()!.url_analysis!.tld_risk || 0) >= 20
+                  ? 'text-red-600'
+                  : 'text-green-600'
+              "
+            >
+              {{ analysis()!.url_analysis!.tld_risk || 0 }}
+            </span>
+            <span class="text-xs text-gray-500">TLD Risk</span>
+            <span class="text-xs font-semibold">/25</span>
+          </div>
+
+          <!-- Path Depth -->
+          <div
+            class="signal-tile flex flex-col items-center bg-gray-50 rounded-xl p-3 gap-1"
+          >
+            <span
+              class="text-lg font-bold"
+              [class]="
+                (analysis()!.url_analysis!.path_depth || 0) > 6
+                  ? 'text-orange-500'
+                  : 'text-gray-700'
+              "
+            >
+              {{ analysis()!.url_analysis!.path_depth || 0 }}
+            </span>
+            <span class="text-xs text-gray-500">Path Depth</span>
+            <span class="text-xs font-semibold">segments</span>
+          </div>
+
+          <!-- Encoding -->
+          <div
+            class="signal-tile flex flex-col items-center bg-gray-50 rounded-xl p-3 gap-1"
+          >
+            @if (analysis()!.url_analysis!.encoding_issues) {
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                width="22"
+                height="22"
+                class="text-orange-500"
+                aria-hidden="true"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495ZM10 5a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 10 5Zm0 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            } @else {
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                width="22"
+                height="22"
+                class="text-green-500"
+                aria-hidden="true"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            }
+            <span class="text-xs text-gray-500">Encoding</span>
+            <span class="text-xs font-semibold">
+              {{ analysis()!.url_analysis!.encoding_issues ? "Issues" : "OK" }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Domain info row -->
+        <div class="flex flex-wrap gap-4 text-sm mb-5 px-1">
+          <div>
+            <span class="text-gray-400 text-xs mr-1">Domain</span>
+            <span class="font-mono text-gray-800 font-medium">{{
+              analysis()!.url_analysis!.domain
+            }}</span>
+          </div>
+          @if (
+            analysis()!.url_analysis!.final_url &&
+            analysis()!.url_analysis!.final_url !==
+              analysis()!.url_analysis!.url
+          ) {
+            <div>
+              <span class="text-gray-400 text-xs mr-1">Resolved to</span>
+              <span class="font-mono text-gray-700 text-xs break-all">{{
+                analysis()!.url_analysis!.final_url
+              }}</span>
+            </div>
+          }
+          @if (analysis()!.url_analysis!.redirect_count) {
+            <div>
+              <span class="text-gray-400 text-xs mr-1">Redirects</span>
+              <span class="font-semibold text-orange-600">{{
+                analysis()!.url_analysis!.redirect_count
+              }}</span>
+            </div>
+          }
+        </div>
+
+        <!-- Detected signals list -->
+        @if (analysis()!.url_analysis!.suspicious_patterns.length) {
+          <div class="mb-4">
+            <p class="text-xs font-semibold text-gray-600 mb-2">
+              Detected Risk Signals
+            </p>
+            <ul class="space-y-1.5">
+              @for (
+                p of analysis()!.url_analysis!.suspicious_patterns;
+                track p
+              ) {
+                <li class="flex items-center gap-2 text-xs text-red-700">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 16 16"
+                    fill="currentColor"
+                    width="12"
+                    height="12"
+                    class="flex-shrink-0 text-red-400"
+                    aria-hidden="true"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M6.701 2.25c.577-1 2.02-1 2.598 0l5.196 9a1.5 1.5 0 0 1-1.299 2.25H2.804a1.5 1.5 0 0 1-1.3-2.25l5.197-9ZM8 4a.75.75 0 0 1 .75.75v3a.75.75 0 0 1-1.5 0v-3A.75.75 0 0 1 8 4Zm0 8a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                  {{ patternLabel(p) }}
+                </li>
+              }
+            </ul>
+          </div>
+        }
+
+        <!-- Online cross-check links -->
+        @if (crosscheckLinks(analysis()!.url_analysis!).length) {
+          <div
+            class="mb-4 border border-blue-100 bg-blue-50 rounded-xl px-4 py-3"
+          >
+            <p class="text-xs font-semibold text-blue-800 mb-1">
+              Not sure this is right? Cross-check this link yourself
+            </p>
+            @if (onlineCheck(analysis()!.url_analysis!); as check) {
+              @if (check.checked && check.reachable === false) {
+                <p class="text-xs text-orange-700 mb-2">
+                  ⚠ We couldn't reach this link online just now — it may be
+                  down, moved, or blocking automated checks.
+                </p>
+              }
+            }
+            <div class="flex flex-wrap gap-2">
+              @for (
+                link of crosscheckLinks(analysis()!.url_analysis!);
+                track link.label
+              ) {
+                <a
+                  [href]="link.url"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-xs bg-white border border-blue-200 text-blue-700 px-3 py-1.5 rounded-full hover:bg-blue-100 transition-colors font-medium"
+                >
+                  {{ link.label }} ↗
+                </a>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Signal detail table (raw values from agent) -->
+        @if (signalDetailRows(analysis()!.url_analysis!).length) {
+          <details class="mt-1">
+            <summary
+              class="text-xs text-gray-400 cursor-pointer select-none hover:text-gray-600"
+            >
+              Show technical signal details
+            </summary>
+            <div class="mt-3 overflow-x-auto">
+              <table
+                class="w-full text-xs border border-gray-100 rounded-lg overflow-hidden"
+              >
+                <thead class="bg-gray-50 text-gray-500 uppercase text-left">
+                  <tr>
+                    <th class="px-3 py-2 font-medium">Signal</th>
+                    <th class="px-3 py-2 font-medium">Value</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                  @for (
+                    row of signalDetailRows(analysis()!.url_analysis!);
+                    track row.key
+                  ) {
+                    <tr class="hover:bg-gray-50">
+                      <td class="px-3 py-2 text-gray-600 font-mono">
+                        {{ row.key }}
+                      </td>
+                      <td class="px-3 py-2 text-gray-800">{{ row.value }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </details>
+        }
+      </div>
+    }
+
+    <!-- Explanation -->
+    @if (analysis()!.explanation) {
+      <div
+        class="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 mb-6"
+      >
+        <h2 class="text-base font-semibold text-gray-900 mb-4">
+          AI Explanation
+        </h2>
+        <div class="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+          {{ analysis()!.explanation }}
+        </div>
+      </div>
+    }
+
+    <!-- Disclaimer -->
+    <div
+      class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800 leading-relaxed"
+    >
+      <strong class="flex items-center gap-1.5 mb-1">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 16 16"
+          fill="currentColor"
+          width="14"
+          height="14"
+          aria-hidden="true"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M6.701 2.25c.577-1 2.02-1 2.598 0l5.196 9a1.5 1.5 0 0 1-1.299 2.25H2.804a1.5 1.5 0 0 1-1.3-2.25l5.197-9ZM8 4a.75.75 0 0 1 .75.75v3a.75.75 0 0 1-1.5 0v-3A.75.75 0 0 1 8 4Zm0 8a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"
+            clip-rule="evenodd"
+          />
+        </svg>
+        Disclaimer
+      </strong>
+      This analysis is generated by AI and is advisory only. It should not be
+      considered definitive proof that content is true, false, or malicious.
+      Always verify important information through official sources before
+      acting.
+    </div>
+
+    <!-- Actions -->
+    <div class="flex gap-4 mt-6">
+      <a
+        routerLink="/analyze"
+        class="flex-1 text-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition-colors"
+      >
+        Analyze Another →
+      </a>
+      <a
+        [routerLink]="['/analyze']"
+        [queryParams]="{ report: analysis()!.id }"
+        class="px-6 py-3 border border-gray-300 text-gray-600 rounded-xl hover:bg-gray-50 text-sm font-medium"
+      >
+        Report this
+      </a>
+    </div>
+  }
+</div>

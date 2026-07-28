@@ -1,0 +1,31 @@
+<div class="flex flex-col items-center">
+  <svg viewBox="0 0 120 120" class="w-36 h-36">
+    <!-- Background ring -->
+    <circle cx="60" cy="60" r="48"
+      fill="none" stroke="#e5e7eb" stroke-width="10" />
+    <!-- Score ring -->
+    <circle cx="60" cy="60" r="48"
+      fill="none"
+      [attr.stroke]="ringColor"
+      stroke-width="10"
+      stroke-linecap="round"
+      stroke-dasharray="301.6"
+      [attr.stroke-dashoffset]="dashOffset"
+      class="gauge-ring"
+      transform="rotate(-90 60 60)" />
+    <!-- Score number -->
+    <text x="60" y="55" text-anchor="middle"
+      fill="#1e293b"
+      font-size="22" font-weight="700" font-family="system-ui">
+      {{ score }}
+    </text>
+    <!-- "/100" label -->
+    <text x="60" y="72" text-anchor="middle"
+      fill="#64748b" font-size="10" font-family="system-ui">
+      / 100
+    </text>
+  </svg>
+  <span class="text-sm font-semibold mt-1" [style.color]="ringColor">
+    {{ label }}
+  </span>
+</div>

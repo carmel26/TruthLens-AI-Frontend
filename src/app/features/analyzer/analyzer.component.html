@@ -1,0 +1,94 @@
+<div class="max-w-3xl mx-auto px-4 py-12">
+  <div class="text-center mb-10">
+    <h1 class="text-3xl font-bold text-gray-900 mb-3">Analyze Content</h1>
+    <p class="text-gray-500">Paste text, a URL, or both. TruthLens AI will run a full risk assessment.</p>
+  </div>
+
+  <!-- Input card -->
+  <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-8">
+
+    <!-- Tabs -->
+    <div class="flex gap-1 bg-gray-100 rounded-lg p-1 mb-6 w-fit">
+      @for (tab of tabs; track tab.key) {
+        <button (click)="activeTab = tab.key"
+          [class]="activeTab === tab.key
+            ? 'bg-white text-blue-700 shadow-sm font-semibold'
+            : 'text-gray-500 hover:text-gray-700'"
+          class="px-4 py-1.5 rounded-md text-sm transition-all">
+          {{ tab.label }}
+        </button>
+      }
+    </div>
+
+    <!-- Text input -->
+    @if (activeTab === 'text' || activeTab === 'both') {
+      <div class="mb-5">
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          Message or Claim
+        </label>
+        <textarea [(ngModel)]="textInput"
+          rows="6"
+          placeholder="Paste the suspicious message, claim, or announcement here..."
+          class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+        ></textarea>
+      </div>
+    }
+
+    <!-- URL input -->
+    @if (activeTab === 'url' || activeTab === 'both') {
+      <div class="mb-5">
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          URL or Website
+        </label>
+        <input [(ngModel)]="urlInput" type="url"
+          placeholder="https://example.com or paste a suspicious link"
+          class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+        />
+      </div>
+    }
+
+    <!-- Error message -->
+    @if (errorMsg()) {
+      <div class="mb-4 bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">
+        {{ errorMsg() }}
+      </div>
+    }
+
+    <!-- Actions -->
+    <div class="flex gap-3">
+      <button (click)="analyze()"
+        [disabled]="loading() || (!textInput.trim() && !urlInput.trim())"
+        class="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
+        @if (loading()) {
+          <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+          </svg>
+          Analyzing...
+        } @else {
+          Analyze →
+        }
+      </button>
+      <button (click)="clear()"
+        class="px-4 py-3 border border-gray-300 text-gray-600 rounded-xl hover:bg-gray-50 text-sm">
+        Clear
+      </button>
+    </div>
+
+    <!-- Disclaimer -->
+    <p class="text-xs text-gray-400 mt-4 text-center leading-relaxed flex items-center justify-center gap-1">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor"
+           width="12" height="12" class="flex-shrink-0" aria-hidden="true">
+        <path fill-rule="evenodd" d="M6.701 2.25c.577-1 2.02-1 2.598 0l5.196 9a1.5 1.5 0 0 1-1.299 2.25H2.804a1.5 1.5 0 0 1-1.3-2.25l5.197-9ZM8 4a.75.75 0 0 1 .75.75v3a.75.75 0 0 1-1.5 0v-3A.75.75 0 0 1 8 4Zm0 8a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd"/>
+      </svg>
+      AI analysis is advisory only. Results should not be considered definitive. Always verify through official sources.
+    </p>
+  </div>
+
+  <!-- Loading skeleton -->
+  @if (loading()) {
+    <div class="mt-8 bg-white border border-gray-200 rounded-2xl shadow-sm p-8">
+      <app-skeleton />
+    </div>
+  }
+</div>
